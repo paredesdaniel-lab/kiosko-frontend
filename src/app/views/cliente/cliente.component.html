@@ -1,0 +1,327 @@
+<p-toast></p-toast>
+
+<div class="card">
+  <p-toolbar styleClass="p-mb-4">
+    <ng-template pTemplate="left">
+      <button
+        pButton
+        pRipple
+        label="Nuevo"
+        icon="pi pi-plus"
+        class="p-button-success p-mr-2"
+        (click)="openNew()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        [label]="Delete"
+        icon="pi pi-trash"
+        class="p-button-danger"
+        (click)="deleteSelectedProducts()"
+        [disabled]="!selectedProducts || !selectedProducts.length"
+      ></button>
+    </ng-template>
+
+    <ng-template pTemplate="right">
+      <p-fileUpload
+        mode="basic"
+        accept="image/*"
+        [maxFileSize]="1000000"
+        label="Importar"
+        chooseLabel="Importar"
+        class="p-mr-2 p-d-inline-block"
+      ></p-fileUpload>
+      <button
+        pButton
+        pRipple
+        label="Exportar"
+        icon="pi pi-upload"
+        class="p-button-help"
+      ></button>
+    </ng-template>
+  </p-toolbar>
+
+  <p-table
+    #dt
+    [value]="products"
+    [rows]="10"
+    [paginator]="true"
+    [globalFilterFields]="[
+      'name',
+      'country.name',
+      'representative.name',
+      'status'
+    ]"
+    responsiveLayout="scroll"
+    [(selection)]="selectedProducts"
+    [rowHover]="true"
+    dataKey="id"
+    currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
+    [showCurrentPageReport]="true"
+  >
+    <ng-template pTemplate="caption">
+      <div class="p-d-flex p-ai-center p-jc-between">
+        <h3 class="p-m-0 mb-3">Usuarios</h3>
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            (input)="dt.filterGlobal($event.target.value, 'contains')"
+            placeholder="Buscar..."
+          />
+        </span>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 3rem">
+          <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+        </th>
+        <th pSortableColumn="name">
+          Name <p-sortIcon field="name"></p-sortIcon>
+        </th>
+        <th>Image</th>
+        <th pSortableColumn="price">
+          Price <p-sortIcon field="price"></p-sortIcon>
+        </th>
+        <th pSortableColumn="category">
+          Category <p-sortIcon field="category"></p-sortIcon>
+        </th>
+        <th pSortableColumn="rating">
+          Reviews <p-sortIcon field="rating"></p-sortIcon>
+        </th>
+        <th pSortableColumn="inventoryStatus">
+          Status <p-sortIcon field="inventoryStatus"></p-sortIcon>
+        </th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-product>
+      <tr>
+        <td>
+          <p-tableCheckbox [value]="product"></p-tableCheckbox>
+        </td>
+        <td>{{ product.name }}</td>
+        <td>
+          <img
+            [src]="'assets/showcase/images/demo/product/' + product.image"
+            [alt]="product.name"
+            width="100"
+            class="p-shadow-4"
+          />
+        </td>
+        <td>{{ product.price | currency: "USD" }}</td>
+        <td>{{ product.category }}</td>
+        <td>
+          <p-rating
+            [ngModel]="product.rating"
+            [readonly]="true"
+            [cancel]="false"
+          ></p-rating>
+        </td>
+        <td>
+          <span
+            [class]="
+              'product-badge status-' +
+              (product.inventoryStatus
+                ? product.inventoryStatus.toLowerCase()
+                : '')
+            "
+            >{{ product.inventoryStatus }}</span
+          >
+        </td>
+        <td>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-success p-mr-2"
+            (click)="editProduct(product)"
+          ></button>
+          <button
+            pButton
+            pRipple
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-warning"
+            (click)="deleteProduct(product)"
+          ></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="summary">
+      <div class="p-d-flex p-ai-center p-jc-between">
+        In total there are {{ products ? products.length : 0 }} products.
+      </div>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog
+  [(visible)]="productDialog"
+  [style]="{ width: '450px' }"
+  [modal]="true"
+  styleClass="p-fluid"
+>
+  <ng-template pTemplate="header"> {{ dialogTitle }} </ng-template>
+  <ng-template pTemplate="content">
+    <img
+      [src]="'assets/showcase/images/demo/product/' + product.image"
+      [alt]="product.image"
+      class="product-image"
+      *ngIf="product.image"
+    />
+    <div class="p-field">
+      <label for="username">Nombre de usuario</label>
+      <input
+        type="text"
+        pInputText
+        id="username"
+        [(ngModel)]="product.username"
+        required
+      />
+      <small class="p-error" *ngIf="submitted && !product.username"
+        >Nombre de usuario is required.</small
+      >
+    </div>
+
+    <div class="p-field">
+      <label for="nombres">Nombres</label>
+      <input
+        type="text"
+        pInputText
+        id="nombres"
+        [(ngModel)]="product.nombres"
+        required
+        autofocus
+      />
+      <small class="p-error" *ngIf="submitted && !product.nombres"
+        >Nombres is required.</small
+      >
+    </div>
+    <div class="p-field">
+      <label for="apellidos">Apellidos</label>
+      <input
+        type="text"
+        pInputText
+        id="apellidos"
+        [(ngModel)]="product.apellidos"
+        required
+      />
+      <small class="p-error" *ngIf="submitted && !product.apellidos"
+        >Apellidos is required.</small
+      >
+    </div>
+    <div class="p-field">
+      <label for="direccion">Dirección</label>
+      <input
+        type="text"
+        pInputText
+        id="direccion"
+        [(ngModel)]="product.direccion"
+        required
+      />
+      <small class="p-error" *ngIf="submitted && !product.direccion"
+        >Direccion is required.</small
+      >
+    </div>
+    <div class="p-field">
+      <label for="telefono">Teléfono</label>
+      <input
+        type="text"
+        pInputText
+        id="telefono"
+        [(ngModel)]="product.telefono"
+        required
+      />
+      <small class="p-error" *ngIf="submitted && !product.telefono"
+        >Telefono is required.</small
+      >
+    </div>
+    <div class="p-field">
+      <label for="email">Correo electrónico</label>
+      <input
+        type="email"
+        pInputText
+        id="email"
+        [(ngModel)]="product.email"
+        required
+      />
+      <small class="p-error" *ngIf="submitted && !product.email"
+        >Correo electrónico is required.</small
+      >
+    </div>
+    <div class="p-field">
+      <label for="password">Contraseña</label>
+      <p-password
+        [(ngModel)]="product.password"
+        [toggleMask]="true"
+      ></p-password>
+    </div>
+    <div class="p-field">
+      <label for="tienda">Sucursal</label>
+      <p-dropdown
+        [(ngModel)]="product.tienda"
+        inputId="tienda"
+        [options]="statuses"
+        placeholder="Seleccione una sucursal"
+      >
+        <ng-template let-option pTemplate="item">
+          <span [class]="'product-badge status-' + option.value">{{
+            option.label
+          }}</span>
+        </ng-template>
+      </p-dropdown>
+    </div>
+
+    <label for="rol">Rol</label>
+    <div class="p-field-checkbox">
+      <p-checkbox
+        name="rol"
+        value="Administrador"
+        [(ngModel)]="selectedRol"
+        inputId="administrador"
+      ></p-checkbox>
+      <label for="administrador">Administrador</label>
+    </div>
+    <div class="p-field-checkbox">
+      <p-checkbox
+        name="rol"
+        value="Almacenero"
+        [(ngModel)]="selectedRol"
+        inputId="almacenero"
+      ></p-checkbox>
+      <label for="almacenero">Almacenero</label>
+    </div>
+    <div class="p-field-checkbox">
+      <p-checkbox
+        name="rol"
+        value="Cajero"
+        [(ngModel)]="selectedRol"
+        inputId="cajero"
+      ></p-checkbox>
+      <label for="cajero">Cajero</label>
+    </div>
+  </ng-template>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      pRipple
+      label="Cancel"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="hideDialog()"
+    ></button>
+    <button
+      pButton
+      pRipple
+      label="Save"
+      icon="pi pi-check"
+      class="p-button-text"
+      (click)="saveProduct()"
+    ></button>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
